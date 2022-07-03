@@ -1,6 +1,7 @@
 import time
 import random
-import psycopg2
+
+# import psycopg2
 import rich
 import sys
 
@@ -12,17 +13,18 @@ db_pass = "secrekt"
 db_host = "localhost"  # db
 db_port = "5432"
 
+
 # Connecto to the database
 db_string = "postgresql://{}:{}@{}:{}/{}".format(
     db_user, db_pass, db_host, db_port, db_name
 )
+
 db = create_engine(db_string)
 
 
 def add_new_row(n):
-    # Insert a new number into the 'numbers' table.
     db.execute(
-        "INSERT INTO numbers (number,timestamp) "
+        "INSERT INTO compounds (number,timestamp) "
         + "VALUES ("
         + str(n)
         + ","
@@ -32,11 +34,10 @@ def add_new_row(n):
 
 
 def get_last_row():
-    # Retrieve the last number inserted inside the 'numbers'
     query = (
         ""
-        + "SELECT number "
-        + "FROM numbers "
+        + "SELECT compound "
+        + "FROM compounds "
         + "WHERE timestamp >= (SELECT max(timestamp) FROM numbers)"
         + "LIMIT 1"
     )

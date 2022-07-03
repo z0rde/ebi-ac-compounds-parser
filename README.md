@@ -6,7 +6,7 @@ Will hopefully parse the compounds into postgres database
 
 CLI commands:
 
-> parse <compound name>
+> parse "compound name"
 
 Possible compound names are:
 
@@ -18,3 +18,5 @@ Possible compound names are:
 > XP9
 > 18W
 > 29P
+
+docker run -i -p 5432:5432 --rm --name db postgr

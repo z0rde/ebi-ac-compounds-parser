@@ -2,6 +2,7 @@ import time
 import random
 import psycopg2
 import rich
+import sys
 
 from sqlalchemy import create_engine
 
@@ -47,8 +48,13 @@ def get_last_row():
 
 if __name__ == "__main__":
     print("Application started")
-
-    while True:
-        time.sleep(5)
-        add_new_row(random.randint(1, 100000))
-        print("The last value insterted is: {}".format(get_last_row()))
+    add_new_row(random.randint(1, 100000))
+    print("The last value insterted is: {}".format(get_last_row()))
+    # while True:
+    # time.sleep(1)
+    # add_new_row(random.randint(1, 100000))
+    # print("The last value insterted is: {}".format(get_last_row()))
+    if (len(sys.argv)) == 1:
+        print("USAGE: \n get <compound name>")
+        print("")
+    # print(sys.argv[1])

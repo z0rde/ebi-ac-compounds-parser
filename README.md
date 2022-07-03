@@ -1,15 +1,20 @@
-# Tutorial_DockerPythonPostgres
+# ebi.ac.uk compounds database parser
 
-Here is available the code of the Medium tutorial here: XXXX
+Will hopefully parse the compounds into postgres database
 
-## Create db table
+## LEST HOPE THAT IT WILL
 
-Commands to create the db table:
+CLI commands:
 
-> docker ps 
+> parse <compound name>
 
-Used to identify the CONTAINER ID of postgres
+Possible compound names are:
 
-> docker exec -it <CONTAINER_ID> bash
-
-> psql postgres://username:secret@localhost:5432/database
+> ADP
+> ATP
+> STI
+> ZID
+> DPM
+> XP9
+> 18W
+> 29P

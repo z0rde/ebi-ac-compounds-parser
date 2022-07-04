@@ -1,17 +1,26 @@
+from doctest import debug
 import time
 from attr import field
 from pyparsing import col
 import requests
 import json
-from psycopg2 import connect, Error
+
+# from psycopg2 import connect
+# from psycopg2.extras import LoggingConnection
 from rich import print
 from rich.console import Console
 from rich.table import Table
 import sys
 import os
 from sqlalchemy import create_engine
-import logging
+import logging.handlers
 
+handler = logging.FileHandler("sql_calls.log")
+handler.setFormatter(logging.Formatter("%(asctime)s  %(levelname)s %(message)s"))
+sql_logger = logging.getLogger("sqlalchemy.engine")
+sql_logger.propagate = False
+sql_logger.setLevel(20)
+sql_logger.addHandler(handler)
 
 db_name = "compounds"
 db_user = "ebi-as"
@@ -198,10 +207,21 @@ if __name__ == "__main__":
         if not (table_rows_count()):
             print("Nothing to show, first [bold]get[/bold] some values from api")
             quit()
-        for compound in compound_names:
-            data.append(get_row(compound))
-        print_table(data)
-    help()
+        # for compound in compound_names:
+        #    data.append(get_row(compound))
+        # print_table(data)
+        print(
+            list(
+                db.execute(
+                    ""
+                    + "SELECT * FROM compounds "
+                    + " LIMIT "
+                    + str(len(compound_names))
+                )
+            )
+        )
+        quit()
+    show_help()
 
 
 def test_no_args():

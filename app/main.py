@@ -8,7 +8,6 @@ from rich.console import Console
 from rich.table import Table
 import sys
 import os
-
 from sqlalchemy import create_engine
 
 
@@ -52,7 +51,11 @@ def request_api(compound):
 def drop():
     db.execute("DROP TABLE IF EXISTS compounds")
     db.execute(
-        "CREATE TABLE IF NOT EXISTS compounds (compound VARCHAR, formula VARCHAR, inchi VARCHAR, inchi_key VARCHAR, smiles VARCHAR, cross_links_count SMALLINT)"
+        """
+    CREATE TABLE compounds (compound VARCHAR, 
+    formula VARCHAR, inchi VARCHAR, inchi_key VARCHAR, 
+    smiles VARCHAR, cross_links_count SMALLINT)
+    """
     )
     print("Database cleared")
 
@@ -80,6 +83,7 @@ def shorten(list, length):
 
 
 def get_row(compound):
+    print("geting compound:", compound)
     try:
         row = db.execute(
             ""
@@ -98,17 +102,23 @@ def get_row(compound):
         return False
 
 
-def print_row(*data):
-    # print("HERE", data)
+def print_table(*data):
+    try:
+        width = os.get_terminal_size().columns
+    except:
+        width = 120
 
     table = Table(title="Compounds:")
     for column in columns:
-        table.add_column(column, style="cyan", no_wrap=True)
+        table.add_column(column, style="magenta", no_wrap=True)
     # for row in rows:
     #    print("row:", row, "len:", len(row))
-    for row in data:
-        row = shorten(row, 10)
-        table.add_row(*row)  #
+    for inner in data:
+        for row in inner:
+            row = shorten(
+                row, int((width - 7) / len(row))
+            )  # the formula of a nice table
+            table.add_row(*row)  #
     console = Console()
     console.print(table)
     quit()
@@ -116,7 +126,6 @@ def print_row(*data):
 
 if __name__ == "__main__":
     print("Mission start!")
-    print(os.get_terminal_size())
     if (len(sys.argv)) == 1:  # show help if no arguments
         print(
             """
@@ -171,7 +180,11 @@ if __name__ == "__main__":
 
     elif sys.argv[1] == "show":
         if len(sys.argv) == 2:
-            print_row(get_row("ADP"))
+            data = []
+            for compound in compound_names:
+                data.append(get_row(compound)[0])
+            print_table(data)
+            # print(data)
             quit()
 
 

@@ -3,10 +3,11 @@ from attr import field
 from pyparsing import col
 import requests
 import json
-
 from psycopg2 import connect, Error
-import rich
+from rich.console import Console
+from rich.table import Table
 import sys
+import os
 
 from sqlalchemy import create_engine
 
@@ -25,33 +26,7 @@ db_string = "postgresql://{}:{}@{}:{}/{}".format(
     db_user, db_pass, db_host, db_port, db_name
 )
 
-
 db = create_engine(db_string)
-
-
-def add_new_row(n):
-    db.execute(
-        "INSERT INTO compounds (number,timestamp) "
-        + "VALUES ("
-        + str(n)
-        + ","
-        + str(int(round(time.time() * 1000)))
-        + ");"
-    )
-
-
-def get_last_row():
-    query = (
-        ""
-        + "SELECT compound "
-        + "FROM compounds "
-        + "WHERE timestamp >= (SELECT max(timestamp) FROM numbers)"
-        + "LIMIT 1"
-    )
-
-    result_set = db.execute(query)
-    for r in result_set:
-        return r[0]
 
 
 def request_api(compound):
@@ -76,6 +51,9 @@ def request_api(compound):
 
 def drop():
     db.execute("DROP TABLE IF EXISTS compounds")
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS compounds (compound VARCHAR, formula VARCHAR, inchi VARCHAR, inchi_key VARCHAR, smiles VARCHAR, cross_links_count SMALLINT)"
+    )
     print("Database cleared")
 
 
@@ -92,9 +70,53 @@ def insert_row(fields_data):
     )
 
 
+def shorten(list, length):
+    newlist = []
+    for element in list:
+        if len(element) > length:
+            element = element[:length] + "..."
+        newlist.append(element)
+    return newlist
+
+
+def get_row(compound):
+    try:
+        row = db.execute(
+            ""
+            + "SELECT * "
+            + "FROM compounds "
+            + "WHERE compound = '"
+            + compound
+            + "' LIMIT 1"
+        )
+        row = list(row)
+        row = list(row[0])
+        row.append(str(row.pop()))  # for Rich table int is not acceptable
+        return row
+    except:
+        print("Failed to get row:", compound)
+        return False
+
+
+def print_row(*data):
+    # print("HERE", data)
+
+    table = Table(title="Compounds:")
+    for column in columns:
+        table.add_column(column, style="cyan", no_wrap=True)
+    # for row in rows:
+    #    print("row:", row, "len:", len(row))
+    for row in data:
+        row = shorten(row, 10)
+        table.add_row(*row)  #
+    console = Console()
+    console.print(table)
+    quit()
+
+
 if __name__ == "__main__":
     print("Mission start!")
-
+    print(os.get_terminal_size())
     if (len(sys.argv)) == 1:  # show help if no arguments
         print(
             """
@@ -127,6 +149,17 @@ if __name__ == "__main__":
         if len(sys.argv) == 2:
             print("You must specify a compound name")
             quit()
+        if sys.argv[2].upper() == "ALL":
+            print("Gathering all the compounds...")
+            drop()
+            execlist = []
+            for compound in compound_names:
+                insert_row(request_api(compound))
+                if (
+                    compound is not compound_names[-1]
+                ):  # delay only if there are no more requests
+                    time.sleep(1)
+            quit()
 
         if sys.argv[2].upper() not in compound_names:
             print("\nInvalid compound name:", sys.argv[2].upper())
@@ -138,7 +171,7 @@ if __name__ == "__main__":
 
     elif sys.argv[1] == "show":
         if len(sys.argv) == 2:
-            # show all
+            print_row(get_row("ADP"))
             quit()
 
 

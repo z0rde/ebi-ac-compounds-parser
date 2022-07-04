@@ -4,11 +4,13 @@ from pyparsing import col
 import requests
 import json
 from psycopg2 import connect, Error
+from rich import print
 from rich.console import Console
 from rich.table import Table
 import sys
 import os
 from sqlalchemy import create_engine
+import logging
 
 
 db_name = "compounds"
@@ -20,7 +22,7 @@ db_port = "5432"
 columns = ["compound", "formula", "inchi", "inchi_key", "smiles", "cross_links_count"]
 
 compound_names = ["ADP", "ATP", "STI", "ZID", "DPM", "XP9", "18W", "29P"]
-# Connecto to the database
+
 db_string = "postgresql://{}:{}@{}:{}/{}".format(
     db_user, db_pass, db_host, db_port, db_name
 )
@@ -82,8 +84,12 @@ def shorten(list, length):
     return newlist
 
 
+def table_rows_count():
+    return list(db.execute("" + "SELECT COUNT(*) " + "FROM compounds "))[0][0]
+
+
 def get_row(compound):
-    print("geting compound:", compound)
+    # print("geting compound:", compound)
     try:
         row = db.execute(
             ""
@@ -98,7 +104,7 @@ def get_row(compound):
         row.append(str(row.pop()))  # for Rich table int is not acceptable
         return row
     except:
-        print("Failed to get row:", compound)
+        # print("Failed to get row:", compound)
         return False
 
 
@@ -111,44 +117,48 @@ def print_table(*data):
     table = Table(title="Compounds:")
     for column in columns:
         table.add_column(column, style="magenta", no_wrap=True)
-    # for row in rows:
-    #    print("row:", row, "len:", len(row))
     for inner in data:
         for row in inner:
-            row = shorten(
-                row, int((width - 7) / len(row))
-            )  # the formula of a nice table
-            table.add_row(*row)  #
+            if row:
+                row = shorten(
+                    row, int((width - 7) / len(row))
+                )  # the formula of a nice table
+                table.add_row(*row)  #
     console = Console()
     console.print(table)
     quit()
 
 
+def is_compound(name):
+    if name.upper() not in compound_names:
+        print("\nInvalid compound name:", name)
+        return False
+    return True
+
+
+def show_help():
+    print(  # if unknown argument or no argument given, print help
+        """
+[italic]USAGE:[/italic]
+            
+[bold]get[/bold] [compound name] - parse compound info to db
+[bold]get all[/bold] - get all compounds
+
+[bold]show[/bold] [compound name] - display compound data from db
+[bold]show all[/bold] - display all gathered data
+            
+[bold]clear[/bold] - erase the database
+
+valid compound names are: """
+    )
+    print(*compound_names, sep=", ")
+    quit()
+
+
 if __name__ == "__main__":
-    print("Mission start!")
-    if (len(sys.argv)) == 1:  # show help if no arguments
-        print(
-            """
-    USAGE:
-                
-    get [compound name] - parse compound info to db
-    get all - get all compounds
-
-    show [compound name] - display compound data from db
-    show all - display all gathered data
-               
-    clear - erase the database
-
-    valid compound names are: """
-        )
-        print(*compound_names, sep=", ")
-        print(
-            """
-
-            """
-        )
-        quit()
-
+    print("[yellow]ebi.cli.uk compound database parser version 1.0[/yellow]")
+    if len(sys.argv) == 1:
+        show_help()
     if sys.argv[1] == "clear":
         drop()
         quit()
@@ -170,22 +180,28 @@ if __name__ == "__main__":
                     time.sleep(1)
             quit()
 
-        if sys.argv[2].upper() not in compound_names:
-            print("\nInvalid compound name:", sys.argv[2].upper())
+        if not is_compound(sys.argv[2]):
             quit()
 
         insert_row(request_api(sys.argv[2]))
-        print("Compound", sys.argv[2], "added to database! ٩(◕‿◕｡)۶")
+        print("Compound", sys.argv[2], "added to database! [green]٩(◕‿◕｡)۶[/green]")
         quit()
 
     elif sys.argv[1] == "show":
-        if len(sys.argv) == 2:
-            data = []
-            for compound in compound_names:
-                data.append(get_row(compound)[0])
-            print_table(data)
-            # print(data)
+        data = []
+        if len(sys.argv) == 2 or sys.argv[2].upper() == "ALL":
+            pass  # some tricky logic, or not ( ͡° ͜ʖ ͡°)
+        elif not is_compound(sys.argv[2]):
             quit()
+        else:
+            compound_names = [sys.argv[2].upper()]
+        if not (table_rows_count()):
+            print("Nothing to show, first [bold]get[/bold] some values from api")
+            quit()
+        for compound in compound_names:
+            data.append(get_row(compound))
+        print_table(data)
+    help()
 
 
 def test_no_args():

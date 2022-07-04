@@ -52,7 +52,7 @@ def get_last_row():
 
 if __name__ == "__main__":
     print("Application started")
-    # add_new_row(random.randint(1, 100000))
+    add_new_row(random.randint(1, 100000))
     # print("The last value insterted is: {}".format(get_last_row()))
 
     # while True:

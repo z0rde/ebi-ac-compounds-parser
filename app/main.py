@@ -1,4 +1,5 @@
 import time
+from attr import field
 from pyparsing import col
 import requests
 import json
@@ -53,9 +54,9 @@ def get_last_row():
         return r[0]
 
 
-def request_api(api):
-    api = api.upper()
-    url = "https://www.ebi.ac.uk/pdbe/graph-api/compound/summary/" + api
+def request_api(compound):
+    compound = compound.upper()
+    url = "https://www.ebi.ac.uk/pdbe/graph-api/compound/summary/" + compound
     print(f"Requesting JSON from {url}")
     try:
         text = requests.get(url)
@@ -64,60 +65,81 @@ def request_api(api):
         quit()
     text = text.text
     data = json.loads(text)
-    # print(type(data))
-    # print(data[api][0]["name"])
-    return data
+    fields_data = [compound]  # first element is not from nested json part
+    for column in columns[1:-1]:
+        fields_data.append(data[compound][0][column])
+    fields_data.append(
+        len(data[compound][0]["cross_links"][0])
+    )  # calculating cross_links_count
+    return fields_data
 
 
-def insert_row(data, api):
-    for column in columns:
-        print(column)
-    print("INSERT INTO compounds (" + ",".join(columns) + ")")
-    """
+def drop():
+    db.execute("DROP TABLE IF EXISTS compounds")
+    print("Database cleared")
+
+
+def insert_row(fields_data):
     db.execute(
-        "INSERT INTO compounds (number,timestamp) "
-        + "VALUES ("
-        + str(n)
-        + ","
-        + str(int(round(time.time() * 1000)))
+        "INSERT INTO compounds ("
+        + ",".join(columns)
+        + ")"
+        + "VALUES ('"
+        + "','".join(fields_data[:-1])
+        + "',"
+        + str(fields_data[-1])  # last element cross_links_count is an int
         + ");"
     )
-    """
 
 
 if __name__ == "__main__":
-    print("Application started")
-    # add_new_row(random.randint(1, 100000))
+    print("Mission start!")
 
-    # print("The last value insterted is: {}".format(get_last_row()))
+    if (len(sys.argv)) == 1:  # show help if no arguments
+        print(
+            """
+    USAGE:
+                
+    get [compound name] - parse compound info to db
+    get all - get all compounds
 
-    # while True:
-    # time.sleep(1)
-    # add_new_row(random.randint(1, 100000))
-    # print("The last value insterted is: {}".format(get_last_row()))
+    show [compound name] - display compound data from db
+    show all - display all gathered data
+               
+    clear - erase the database
 
-    if (len(sys.argv)) == 1:
-        print("USAGE: \n\n get <compound name>")
-        print("or \n show <compound name>")
-        print("\nvalid compound names are:")
+    valid compound names are: """
+        )
         print(*compound_names, sep=", ")
+        print(
+            """
+
+            """
+        )
+        quit()
+
+    if sys.argv[1] == "clear":
+        drop()
         quit()
 
     if sys.argv[1] == "get":
+
         if len(sys.argv) == 2:
             print("You must specify a compound name")
             quit()
+
         if sys.argv[2].upper() not in compound_names:
             print("\nInvalid compound name:", sys.argv[2].upper())
             quit()
-        data = request_api(sys.argv[2])
-        insert_row(data, sys.argv[2])
+
+        insert_row(request_api(sys.argv[2]))
+        print("Compound", sys.argv[2], "added to database! ٩(◕‿◕｡)۶")
+        quit()
 
     elif sys.argv[1] == "show":
         if len(sys.argv) == 2:
             # show all
             quit()
-    # print(sys.argv[1])
 
 
 def test_no_args():

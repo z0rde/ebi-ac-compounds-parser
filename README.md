@@ -26,16 +26,16 @@ for example
 
 > sudo docker-compose run app get all
 
-get - parse compound info to db
+_get_ - parse compound info to db
 
-get all - get all compounds
+_get all_ - get all compounds
 
-show - display compound data from db
+_show_ - display compound data from db
 
-show all - display all gathered data
+_show all_ - display all gathered data
 
-clear - erase the database
+_clear_ - erase the database
 
 valid compound names are:
 
-ADP, ATP, STI, ZID, DPM, XP9, 18W, 29P
+_ADP, ATP, STI, ZID, DPM, XP9, 18W, 29P_

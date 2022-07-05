@@ -2,7 +2,7 @@
 
 Parsing compounds data from ebi.ac.uk api to Postgres database.
 The goal was to keep it clean and minimal in modules, without using
-unnecesary thinks like flask etc.
+any unnecesary things like flask etc.
 
 external modules used:
 

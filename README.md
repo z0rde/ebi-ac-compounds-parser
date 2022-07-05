@@ -3,10 +3,15 @@
 Parsing compounds data from ebi.ac.uk api to Postgres database.
 The goal was to keep it clean an minimal in modules, without using
 unnecesary thinks like flask etc.
+
 external modules used:
+
   requests
+  
   rich
+  
   sqlalchemy
+
 
 
 ## How to use:

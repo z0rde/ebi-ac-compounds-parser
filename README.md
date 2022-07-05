@@ -1,22 +1,36 @@
 # ebi.ac.uk compounds database parser
 
-Will hopefully parse the compounds into postgres database
+Parsing compounds data from ebi.ac.uk api to Postgres database.
+The goal was to keep it clean an minimal in modules, without using
+unnecesary thinks like flask etc.
 
-## LEST HOPE THAT IT WILL
+external modules used:
 
-CLI commands:
+  requests
+  
+  rich
+  
+  sqlalchemy
 
-> parse "compound name"
 
-Possible compound names are:
 
-> ADP
-> ATP
-> STI
-> ZID
-> DPM
-> XP9
-> 18W
-> 29P
+## How to use:
 
-docker run -i -p 5432:5432 --rm --name db postgr
+main.py CLI commands:
+
+ 
+ get  - parse compound info to db
+ 
+ get all - get all compounds
+ 
+ show  - display compound data from db
+ 
+ show all - display all gathered data
+
+
+clear - erase the database
+
+
+valid compound names are: 
+
+ADP, ATP, STI, ZID, DPM, XP9, 18W, 29P

@@ -1,7 +1,7 @@
 # ebi.ac.uk compounds database parser
 
 Parsing compounds data from ebi.ac.uk api to Postgres database.
-The goal was to keep it clean an minimal in modules, without using
+The goal was to keep it clean and minimal in modules, without using
 unnecesary thinks like flask etc.
 
 external modules used:
@@ -14,13 +14,15 @@ sqlalchemy
 
 # How to use:
 
-install with
+_install with_
 
 > docker-compose build
 
+_run with command line arguments:_
+
 ### sudo docker-compose run app [arguments...]
 
-_etc._
+for example
 
 > sudo docker-compose run app get all
 

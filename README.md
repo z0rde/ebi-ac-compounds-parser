@@ -16,6 +16,9 @@ sqlalchemy
 
 ### sudo docker-compose run app [arguments...]
 
+*etc.
+*sudo docker-compose run app get all
+
 get - parse compound info to db
 
 get all - get all compounds

@@ -1,7 +1,7 @@
 from doctest import debug
-import time
 from attr import field
 from pyparsing import col
+import time
 import requests
 import json
 from rich import print
@@ -28,6 +28,7 @@ db_port = "5432"
 
 columns = ["compound", "formula", "inchi", "inchi_key", "smiles", "cross_links_count"]
 
+# global compound_names
 compound_names = ["ADP", "ATP", "STI", "ZID", "DPM", "XP9", "18W", "29P"]
 
 db_string = "postgresql://{}:{}@{}:{}/{}".format(
@@ -97,6 +98,11 @@ def table_rows_count():
     return list(db.execute("" + "SELECT COUNT(*) " + "FROM compounds "))[0][0]
 
 
+def compounds_inside_table():
+    tlist = list(db.execute("" + "SELECT compound FROM compounds "))
+    return [item for t in tlist for item in t]
+
+
 def get_row(compound):
     # print("geting compound:", compound)
     try:
@@ -159,7 +165,11 @@ def show_help():
 valid compound names are: """
     )
     print(*compound_names, sep=", ")
-    return "invalid arguments"
+    return "Invalid arguments"
+
+
+def blue(string):
+    return "[bold blue]" + string + "[/bold blue]"
 
 
 def main(cmd):
@@ -168,13 +178,12 @@ def main(cmd):
         return show_help()
     if cmd[1] == "clear":
         drop()
-        return "table dropped"
+        return "Table dropped"
 
     if cmd[1] == "get":
 
         if len(cmd) == 2:
-            print("You must specify a compound name")
-            return "no compound name"
+            return "You must specify a compound name"
         if cmd[2].upper() == "ALL":
             print("Gathering all the compounds...")
             drop()
@@ -184,53 +193,66 @@ def main(cmd):
                     compound is not compound_names[-1]
                 ):  # delay only if there are no more requests
                     time.sleep(1)
-            return "all compounds gathered"
+            return "All compounds gathered"
 
-        if not is_compound(cmd[2]):
-            print("invalid compound name")
-            return "invalid compound name"
-
-        insert_row(request_api(cmd[2]))
-        print("Compound", cmd[2], "added to database! [green]٩(◕‿◕｡)۶[/green]")
-        return "compound added"
+        if not is_compound(cmd[2].upper()):
+            return "Invalid compound name"
+        elif cmd[2].upper() not in compounds_inside_table():
+            insert_row(request_api(cmd[2]))
+            return "Compound " + cmd[2] + " added to database"
+        else:
+            return "Compound is already in the database!"
 
     elif cmd[1] == "show":
+        compounds_inside = compounds_inside_table()  # less sql queries
+        if not compounds_inside:
+            return "Nothing to show, table is empty!"
         data = []
+
         if len(cmd) == 2 or cmd[2].upper() == "ALL":
             pass  # some tricky logic, or not ( ͡° ͜ʖ ͡°)
+
         elif not is_compound(cmd[2]):
-            print("invalid compound name")
             return "invalid compound name"
+
         else:
-            compound_names = [cmd[2].upper()]
-        if not (table_rows_count()):
-            print("Nothing to show, first [bold]get[/bold] some values from api")
-            return "table empty"
+            if cmd[2] not in compounds_inside:
+                return "That compound in not in the table"
         data = list(
             db.execute(
                 "" + "SELECT * FROM compounds " + " LIMIT " + str(len(compound_names))
             )
         )
         print_table(data)
-        return "printed all"
+        return "Done!"
     return show_help()
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    print(blue(main(sys.argv)))
 
 
 def test_no_args():
-    assert main([None, None]) == "invalid arguments"
+    assert main([None, None]) == "Invalid arguments"
 
 
 def test_wrong_args():
-    assert main([None, "oh", "hi", "mark"]) == "invalid arguments"
+    assert main([None, "oh", "hi", "mark"]) == "Invalid arguments"
 
 
 def test_wrong_sub_args():
-    assert main([None, "get", "something"]) == "invalid compound name"
+    assert main([None, "get", "something"]) == "Invalid compound name"
 
 
 def test_right_args():
-    assert main([None, "get", "xp9"]) == "compound added"
+    main([None, "clear"])
+    assert main([None, "get", "atp"]) == "Compound atp added to database"
+
+
+def test_double_record():
+    main([None, "clear"])
+    main([None, "get", "18w"])
+    assert main([None, "get", "18w"]) == "Compound is already in the database!"
+
+
+# [green]٩(◕‿◕｡)۶[/green]

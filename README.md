@@ -14,6 +14,10 @@ sqlalchemy
 
 # How to use:
 
+install with
+
+> docker-compose build
+
 ### sudo docker-compose run app [arguments...]
 
 _etc._

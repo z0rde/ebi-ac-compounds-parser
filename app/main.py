@@ -4,9 +4,6 @@ from attr import field
 from pyparsing import col
 import requests
 import json
-
-# from psycopg2 import connect
-# from psycopg2.extras import LoggingConnection
 from rich import print
 from rich.console import Console
 from rich.table import Table
@@ -21,6 +18,7 @@ sql_logger = logging.getLogger("sqlalchemy.engine")
 sql_logger.propagate = False
 sql_logger.setLevel(20)
 sql_logger.addHandler(handler)
+
 
 db_name = "compounds"
 db_user = "ebi-as"
@@ -46,7 +44,7 @@ def request_api(compound):
     try:
         text = requests.get(url)
     except:
-        print("Could not connect to ebi.ac api ¯\_(ツ)_/¯")
+        debug.critical("Could not connect to ebi.ac api (ツ)")
         quit()
     text = text.text
     data = json.loads(text)
@@ -87,6 +85,8 @@ def insert_row(fields_data):
 def shorten(list, length):
     newlist = []
     for element in list:
+        if type(element) == int:  # check for cross_links_count
+            element = str(element)
         if len(element) > length:
             element = element[:length] + "..."
         newlist.append(element)
@@ -113,7 +113,6 @@ def get_row(compound):
         row.append(str(row.pop()))  # for Rich table int is not acceptable
         return row
     except:
-        # print("Failed to get row:", compound)
         return False
 
 
@@ -135,7 +134,6 @@ def print_table(*data):
                 table.add_row(*row)  #
     console = Console()
     console.print(table)
-    quit()
 
 
 def is_compound(name):
@@ -161,76 +159,78 @@ def show_help():
 valid compound names are: """
     )
     print(*compound_names, sep=", ")
-    quit()
+    return "invalid arguments"
 
 
-if __name__ == "__main__":
+def main(cmd):
     print("[yellow]ebi.cli.uk compound database parser version 1.0[/yellow]")
-    if len(sys.argv) == 1:
-        show_help()
-    if sys.argv[1] == "clear":
+    if len(cmd) == 1:
+        return show_help()
+    if cmd[1] == "clear":
         drop()
-        quit()
+        return "table dropped"
 
-    if sys.argv[1] == "get":
+    if cmd[1] == "get":
 
-        if len(sys.argv) == 2:
+        if len(cmd) == 2:
             print("You must specify a compound name")
-            quit()
-        if sys.argv[2].upper() == "ALL":
+            return "no compound name"
+        if cmd[2].upper() == "ALL":
             print("Gathering all the compounds...")
             drop()
-            execlist = []
             for compound in compound_names:
                 insert_row(request_api(compound))
                 if (
                     compound is not compound_names[-1]
                 ):  # delay only if there are no more requests
                     time.sleep(1)
-            quit()
+            return "all compounds gathered"
 
-        if not is_compound(sys.argv[2]):
-            quit()
+        if not is_compound(cmd[2]):
+            print("invalid compound name")
+            return "invalid compound name"
 
-        insert_row(request_api(sys.argv[2]))
-        print("Compound", sys.argv[2], "added to database! [green]٩(◕‿◕｡)۶[/green]")
-        quit()
+        insert_row(request_api(cmd[2]))
+        print("Compound", cmd[2], "added to database! [green]٩(◕‿◕｡)۶[/green]")
+        return "compound added"
 
-    elif sys.argv[1] == "show":
+    elif cmd[1] == "show":
         data = []
-        if len(sys.argv) == 2 or sys.argv[2].upper() == "ALL":
+        if len(cmd) == 2 or cmd[2].upper() == "ALL":
             pass  # some tricky logic, or not ( ͡° ͜ʖ ͡°)
-        elif not is_compound(sys.argv[2]):
-            quit()
+        elif not is_compound(cmd[2]):
+            print("invalid compound name")
+            return "invalid compound name"
         else:
-            compound_names = [sys.argv[2].upper()]
+            compound_names = [cmd[2].upper()]
         if not (table_rows_count()):
             print("Nothing to show, first [bold]get[/bold] some values from api")
-            quit()
-        # for compound in compound_names:
-        #    data.append(get_row(compound))
-        # print_table(data)
-        print(
-            list(
-                db.execute(
-                    ""
-                    + "SELECT * FROM compounds "
-                    + " LIMIT "
-                    + str(len(compound_names))
-                )
+            return "table empty"
+        data = list(
+            db.execute(
+                "" + "SELECT * FROM compounds " + " LIMIT " + str(len(compound_names))
             )
         )
-        quit()
-    show_help()
+        print_table(data)
+        return "printed all"
+    return show_help()
+
+
+if __name__ == "__main__":
+    main(sys.argv)
 
 
 def test_no_args():
-    add_new_row(111)
+    assert main([None, None]) == "invalid arguments"
 
 
 def test_wrong_args():
-    pass
+    assert main([None, "oh", "hi", "mark"]) == "invalid arguments"
+
+
+def test_wrong_sub_args():
+    assert main([None, "get", "something"]) == "invalid compound name"
 
 
 def test_right_args():
-    pass
+    assert main([None, "get", "xp9"]) == "compound added"

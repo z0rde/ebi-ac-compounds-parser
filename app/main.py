@@ -17,9 +17,9 @@ sql_logger.setLevel(20)
 sql_logger.addHandler(handler)
 
 db_name = "compounds"
-db_user = "compoundparser"
+db_user = "postgres"
 db_pass = "secrekt"
-db_host = "localhost"  # db
+db_host = "db"  # localhost
 db_port = "5432"
 
 columns = [
@@ -159,6 +159,8 @@ def show_help():
 valid compound names are: """
     )
     print(*compound_names, sep=", ")
+    print("Testing database connection:")
+    print(compounds_inside_table())
     return "Invalid arguments"
 
 

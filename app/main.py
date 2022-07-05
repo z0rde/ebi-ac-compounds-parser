@@ -19,7 +19,7 @@ sql_logger.addHandler(handler)
 db_name = "compounds"
 db_user = "postgres"
 db_pass = "secrekt"
-db_host = "db"  # localhost
+db_host = "db"  # for local debug change to localhost
 db_port = "5432"
 
 columns = [
@@ -159,26 +159,20 @@ def show_help():
 valid compound names are: """
     )
     print(*compound_names, sep=", ")
-    print("Testing database connection:")
-    print(compounds_inside_table())
     return "Invalid arguments"
-
-
-def blue(string):
-    return "[bold blue]" + string + "[/bold blue]"
 
 
 def main(cmd):
     print("[yellow]ebi.ac.uk compound database parser version 1.0[/yellow]")
-    if len(cmd) == 1:
+
+    if len(cmd) == 1:  # no arguments specified
         return show_help()
     if cmd[1] == "clear":
         drop()
         return "Table dropped"
 
     if cmd[1] == "get":
-
-        if len(cmd) == 2:
+        if len(cmd) == 2:  # no compound to get specified
             return "You must specify a compound name"
         if cmd[2].upper() == "ALL":
             print("Gathering all the compounds...")
@@ -230,7 +224,7 @@ def main(cmd):
 
 
 if __name__ == "__main__":
-    print(blue(main(sys.argv)))
+    print("[bold blue]" + main(sys.argv) + "[/bold blue]")
 
 
 def test_no_args():

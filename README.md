@@ -6,11 +6,11 @@ any unnecesary things like flask etc.
 
 external modules used:
 
-requests
+_requests_, for getting data from web api
 
-rich
+_rich_, for printing it in table form
 
-sqlalchemy
+_sqlalchemy_ for database access
 
 # How to use:
 

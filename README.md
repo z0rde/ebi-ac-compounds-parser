@@ -12,9 +12,9 @@ rich
 
 sqlalchemy
 
-## How to use:
+# How to use:
 
-# sudo docker-compose run app [arguments...]
+### sudo docker-compose run app [arguments...]
 
 get - parse compound info to db
 

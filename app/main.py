@@ -13,12 +13,11 @@ from sqlalchemy import create_engine
 import logging.handlers
 
 handler = logging.FileHandler("sql_calls.log")
-handler.setFormatter(logging.Formatter("%(asctime)s  %(levelname)s %(message)s"))
+handler.setFormatter(logging.Formatter("%(asctime)s  %(message)s"))
 sql_logger = logging.getLogger("sqlalchemy.engine")
 sql_logger.propagate = False
 sql_logger.setLevel(20)
 sql_logger.addHandler(handler)
-
 
 db_name = "compounds"
 db_user = "ebi-as"
@@ -26,9 +25,15 @@ db_pass = "secrekt"
 db_host = "localhost"  # db
 db_port = "5432"
 
-columns = ["compound", "formula", "inchi", "inchi_key", "smiles", "cross_links_count"]
+columns = [
+    "compound",
+    "formula",
+    "inchi",
+    "inchi_key",
+    "smiles",
+    "cross_links_count",
+]
 
-# global compound_names
 compound_names = ["ADP", "ATP", "STI", "ZID", "DPM", "XP9", "18W", "29P"]
 
 db_string = "postgresql://{}:{}@{}:{}/{}".format(
@@ -45,7 +50,7 @@ def request_api(compound):
     try:
         text = requests.get(url)
     except:
-        debug.critical("Could not connect to ebi.ac api (ツ)")
+        print("Could not connect to ebi.ac api (ツ)")
         quit()
     text = text.text
     data = json.loads(text)
@@ -62,8 +67,8 @@ def drop():
     db.execute("DROP TABLE IF EXISTS compounds")
     db.execute(
         """
-    CREATE TABLE compounds (compound VARCHAR, 
-    formula VARCHAR, inchi VARCHAR, inchi_key VARCHAR, 
+    CREATE TABLE compounds (compound VARCHAR,
+    formula VARCHAR, inchi VARCHAR, inchi_key VARCHAR,
     smiles VARCHAR, cross_links_count SMALLINT)
     """
     )
@@ -94,38 +99,30 @@ def shorten(list, length):
     return newlist
 
 
-def table_rows_count():
-    return list(db.execute("" + "SELECT COUNT(*) " + "FROM compounds "))[0][0]
-
-
 def compounds_inside_table():
     tlist = list(db.execute("" + "SELECT compound FROM compounds "))
     return [item for t in tlist for item in t]
 
 
 def get_row(compound):
-    # print("geting compound:", compound)
-    try:
-        row = db.execute(
-            ""
-            + "SELECT * "
-            + "FROM compounds "
-            + "WHERE compound = '"
-            + compound
-            + "' LIMIT 1"
-        )
-        row = list(row)
-        row = list(row[0])
-        row.append(str(row.pop()))  # for Rich table int is not acceptable
-        return row
-    except:
-        return False
+    row = db.execute(
+        ""
+        + "SELECT * "
+        + "FROM compounds "
+        + "WHERE compound = '"
+        + compound
+        + "' LIMIT 1"
+    )
+    row = list(row)
+    row = list(row[0])
+    row.append(str(row.pop()))  # for Rich table int is not acceptable
+    return row
 
 
 def print_table(*data):
     try:
         width = os.get_terminal_size().columns
-    except:
+    except OSError:
         width = 120
 
     table = Table(title="Compounds:")
@@ -153,13 +150,13 @@ def show_help():
     print(  # if unknown argument or no argument given, print help
         """
 [italic]USAGE:[/italic]
-            
+
 [bold]get[/bold] [compound name] - parse compound info to db
 [bold]get all[/bold] - get all compounds
 
 [bold]show[/bold] [compound name] - display compound data from db
 [bold]show all[/bold] - display all gathered data
-            
+
 [bold]clear[/bold] - erase the database
 
 valid compound names are: """
@@ -173,7 +170,7 @@ def blue(string):
 
 
 def main(cmd):
-    print("[yellow]ebi.cli.uk compound database parser version 1.0[/yellow]")
+    print("[yellow]ebi.ac.uk compound database parser version 1.0[/yellow]")
     if len(cmd) == 1:
         return show_help()
     if cmd[1] == "clear":
@@ -220,7 +217,12 @@ def main(cmd):
                 return "That compound in not in the table"
         data = list(
             db.execute(
-                "" + "SELECT * FROM compounds " + " LIMIT " + str(len(compound_names))
+                ""
+                + "SELECT * FROM compounds "
+                + " LIMIT "
+                + str(
+                    len(compound_names),
+                )
             )
         )
         print_table(data)

@@ -1,6 +1,3 @@
-# from doctest import debug
-# from attr import field
-# from pyparsing import col
 import time
 import requests
 import json
@@ -20,7 +17,7 @@ sql_logger.setLevel(20)
 sql_logger.addHandler(handler)
 
 db_name = "compounds"
-db_user = "ebi-as"
+db_user = "compoundparser"
 db_pass = "secrekt"
 db_host = "localhost"  # db
 db_port = "5432"
@@ -255,6 +252,3 @@ def test_double_record():
     main([None, "clear"])
     main([None, "get", "18w"])
     assert main([None, "get", "18w"]) == "Compound is already in the database!"
-
-
-# [green]٩(◕‿◕｡)۶[/green]

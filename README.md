@@ -18,15 +18,19 @@ external modules used:
 
 main.py CLI commands:
 
-USAGE:
  
  get  - parse compound info to db
+ 
  get all - get all compounds
  
  show  - display compound data from db
+ 
  show all - display all gathered data
 
+
 clear - erase the database
- 
+
+
 valid compound names are: 
+
 ADP, ATP, STI, ZID, DPM, XP9, 18W, 29P
